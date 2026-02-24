@@ -16,10 +16,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- Routers ---
+# Routers
 app.include_router(auth.router)
 
 
+# Root
 @app.get("/")
 async def root():
     return {"message": "Welcome to TaskKey API"}
