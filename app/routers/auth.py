@@ -23,24 +23,15 @@ def register(user_data: UserRegister, conn=Depends(get_db)):
             detail="El correo ya está registrado",
         )
 
-    # Verifica si el username ya existe
-    cursor.execute("SELECT id FROM users WHERE username = %s", (user_data.username,))
-    if cursor.fetchone():
-        cursor.close()
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="El nombre de usuario ya está en uso",
-        )
-
     # Hashea la contraseña e inserta
     hashed = hash_password(user_data.password)
     cursor.execute(
         """
-        INSERT INTO users (username, email, password_hash)
-        VALUES (%s, %s, %s)
-        RETURNING id, username, email, created_at
+        INSERT INTO users (nombre, apellido, email, password_hash)
+        VALUES (%s, %s, %s, %s)
+        RETURNING id, nombre, apellido, email, created_at
         """,
-        (user_data.username, user_data.email, hashed),
+        (user_data.nombre, user_data.apellido, user_data.email, hashed),
     )
     new_user = cursor.fetchone()
     conn.commit()
@@ -65,7 +56,7 @@ def login(user_data: UserLogin, conn=Depends(get_db)):
 
     # Busca el usuario por email
     cursor.execute(
-        "SELECT id, username, email, password_hash, created_at FROM users WHERE email = %s",
+        "SELECT id, nombre, apellido, email, password_hash, created_at FROM users WHERE email = %s",
         (user_data.email,),
     )
     user = cursor.fetchone()
@@ -95,7 +86,8 @@ def login(user_data: UserLogin, conn=Depends(get_db)):
         "token_type": "bearer",
         "user": {
             "id": user["id"],
-            "username": user["username"],
+            "nombre": user["nombre"],
+            "apellido": user["apellido"],
             "email": user["email"],
             "created_at": user["created_at"],
         },
@@ -109,7 +101,7 @@ def get_me(conn=Depends(get_db), current_user: dict = Depends(get_current_user))
     
     # Busca el usuario por id
     cursor.execute(
-        "SELECT id, username, email, created_at FROM users WHERE id = %s",
+        "SELECT id, nombre, apellido, email, created_at FROM users WHERE id = %s",
         (current_user["id"],),
     )
     user = cursor.fetchone()
