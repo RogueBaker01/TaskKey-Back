@@ -26,11 +26,7 @@ def register(user_data: UserRegister, conn=Depends(get_db)):
     # Hashea la contraseña e inserta
     hashed = hash_password(user_data.password)
     cursor.execute(
-        """
-        INSERT INTO users (nombre, apellido, email, password_hash)
-        VALUES (%s, %s, %s, %s)
-        RETURNING id, nombre, apellido, email, created_at
-        """,
+        "INSERT INTO users (nombre, apellido, email, password_hash) VALUES (%s, %s, %s, %s) RETURNING id, nombre, apellido, email, created_at",
         (user_data.nombre, user_data.apellido, user_data.email, hashed),
     )
     new_user = cursor.fetchone()
@@ -93,9 +89,9 @@ def login(user_data: UserLogin, conn=Depends(get_db)):
         },
     }
 
-#Ruta para obtener el perfil del usuario autenticado
-@router.get("/me", response_model=UserResponse)
-def get_me(conn=Depends(get_db), current_user: dict = Depends(get_current_user)):
+#Ruta para obtener el perfil del padre autenticado
+@router.get("/me_padre", response_model=UserResponse)
+def get_me_padre(conn=Depends(get_db), current_user: dict = Depends(get_current_user)):
     
     cursor = conn.cursor()
     
@@ -114,4 +110,9 @@ def get_me(conn=Depends(get_db), current_user: dict = Depends(get_current_user))
             detail="Usuario no encontrado",
         )
 
-    return user
+    return {
+        "id": user["id"],
+        "nombre": user["nombre"],
+        "apellido": user["apellido"],
+        "email": user["email"]
+    }
